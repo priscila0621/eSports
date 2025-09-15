@@ -146,16 +146,21 @@ public class Main {
         Arbitro arbitro = arbitros.get(idxA);
 
         Partida p = new Partida(e1, e2, juego, arbitro);
+
         // registrar la partida en las colecciones relacionadas
-        torneo.addPartida(p);   // composición: torneo posee la partida
-        arbitro.addPartida(p);  // Árbitro la supervisa
-        juego.addPartida(p);    // Juego la referencia
+        torneo.addPartida(p);    // composición: torneo posee la partida
+
+        // <-- CORRECCIÓN: asegurar que los equipos queden referenciados en el torneo
+        torneo.addEquipo(e1);
+        torneo.addEquipo(e2);
+
+        arbitro.addPartida(p);   // Árbitro la supervisa
+        juego.addPartida(p);     // Juego la referencia
 
         System.out.println("Partida creada: " + p);
     }
 
     // ----- listar / eliminar -----
-
     private static void listarTorneosDetalle() {
         if (torneos.isEmpty()) { System.out.println("No hay torneos."); return; }
         for (Torneo t : torneos) {
@@ -192,8 +197,15 @@ public class Main {
         int idx = leerEntero("Seleccione torneo a eliminar (número): ") - 1;
         if (!valido(idx, torneos)) { System.out.println("Índice inválido."); return; }
         Torneo t = torneos.get(idx);
-        // composición: borrar torneo debe limpiar sus partidas (y referencias en juego/arbitro)
+
+        // borrar partidas (esto limpia referencias en Juego/Arbitro)
         t.clearPartidas();
+
+        // quitar la asociación M:N con equipos
+        for (Equipo e : new ArrayList<>(t.getEquipos())) {
+            t.removeEquipo(e);
+        }
+
         torneos.remove(t);
         System.out.println("Torneo eliminado y sus partidas borradas.");
     }
@@ -231,5 +243,3 @@ public class Main {
         return r.equalsIgnoreCase("s") || r.equalsIgnoreCase("y");
     }
 }
-
-
