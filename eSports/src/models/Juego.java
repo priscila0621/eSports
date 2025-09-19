@@ -6,27 +6,73 @@ import java.util.List;
 /**
  * Juego: pertenece a una Categoria y puede usarse en muchas Partidas.
  */
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class Juego {
-    private static int NEXT_ID = 1;
-    private int id;
+    private static final AtomicInteger NEXT_ID = new AtomicInteger(1);
+    private final int id;
     private String nombre;
     private String descripcion;
-
     private Categoria categoria;
-    private List<Partida> partidas = new ArrayList<>();
+    private final List<Partida> partidas = new ArrayList<>();
 
-    public Juego() { this.id = NEXT_ID++; }
+    public Juego() {
+        this.id = NEXT_ID.getAndIncrement();
+    }
+
     public Juego(String nombre, Categoria categoria) {
         this();
-        this.nombre = nombre;
+        setNombre(nombre);
         setCategoria(categoria);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del juego no puede estar vacío.");
+        }
+        this.nombre = nombre;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        if (descripcion != null && descripcion.length() > 500) {
+            throw new IllegalArgumentException("La descripción no puede exceder los 500 caracteres.");
+        }
+        this.descripcion = descripcion;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
     }
 
     public void setCategoria(Categoria categoria) {
         if (this.categoria == categoria) return;
-        if (this.categoria != null) this.categoria.getJuegos().remove(this);
+
+        if (this.categoria != null) {
+            this.categoria.getJuegos().remove(this);
+        }
+
         this.categoria = categoria;
-        if (categoria != null && !categoria.getJuegos().contains(this)) categoria.getJuegos().add(this);
+
+        if (categoria != null && !categoria.getJuegos().contains(this)) {
+            categoria.getJuegos().add(this);
+        }
+    }
+
+    public List<Partida> getPartidas() {
+        return Collections.unmodifiableList(partidas);
     }
 
     public void addPartida(Partida p) {
@@ -39,21 +85,27 @@ public class Juego {
 
     public void removePartida(Partida p) {
         if (p == null) return;
-        if (partidas.remove(p)) p.setJuego(null);
+        if (partidas.remove(p)) {
+            p.setJuego(null);
+        }
     }
-
-    // getters / setters
-    public int getId() { return id; }
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-
-    public Categoria getCategoria() { return categoria; }
-    public List<Partida> getPartidas() { return partidas; }
 
     @Override
     public String toString() {
         return nombre != null ? nombre : "Juego#" + id;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Juego)) return false;
+        Juego juego = (Juego) o;
+        return id == juego.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
+

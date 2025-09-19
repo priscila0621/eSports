@@ -56,10 +56,14 @@ public class Main {
 
     // ----- creación de modelos -----
     private static void crearCategoria() {
-        String nombre = leerTexto("Nombre de la categoría: ");
-        Categoria c = new Categoria(nombre);
-        categorias.add(c);
-        System.out.println("Categoría creada: " + c);
+        try {
+            String nombre = leerTexto("Nombre de la categoría: ");
+            Categoria c = new Categoria(nombre);
+            categorias.add(c);
+            System.out.println("Categoría creada: " + c);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static void crearJuego() {
@@ -67,52 +71,78 @@ public class Main {
             System.out.println("Primero crea al menos una categoría.");
             return;
         }
-        String nombre = leerTexto("Nombre del juego: ");
-        listar(categorias);
-        int idx = leerEntero("Seleccione la categoría (número): ") - 1;
-        if (idx < 0 || idx >= categorias.size()) { System.out.println("Índice inválido."); return; }
-        Juego j = new Juego(nombre, categorias.get(idx));
-        juegos.add(j);
-        System.out.println("Juego creado: " + j);
+        try {
+            String nombre = leerTexto("Nombre del juego: ");
+            listar(categorias);
+            int idx = leerEntero("Seleccione la categoría (número): ") - 1;
+            if (!valido(idx, categorias)) {
+                System.out.println("Índice inválido.");
+                return;
+            }
+            Juego j = new Juego(nombre, categorias.get(idx));
+            juegos.add(j);
+            System.out.println("Juego creado: " + j);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static void crearArbitro() {
-        String nombre = leerTexto("Nombre del árbitro: ");
-        Arbitro a = new Arbitro(nombre);
-        arbitros.add(a);
-        System.out.println("Árbitro creado: " + a);
+        try{
+            String nombre = leerTexto("Nombre del árbitro: ");
+            Arbitro a = new Arbitro(nombre);
+            arbitros.add(a);
+            System.out.println("Árbitro creado: " + a);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static void crearEquipo() {
-        String nombre = leerTexto("Nombre del equipo: ");
-        Equipo e = new Equipo(nombre);
-        equipos.add(e);
-        System.out.println("Equipo creado: " + e);
+        try {
+            String nombre = leerTexto("Nombre del equipo: ");
+            Equipo e = new Equipo(nombre);
+            equipos.add(e);
+            System.out.println("Equipo creado: " + e);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static void crearJugador() {
-        String nombre = leerTexto("Nombre del jugador: ");
-        String alias = leerTexto("Alias: ");
-        int ranking = leerEntero("Ranking (entero): ");
-        Jugador j = new Jugador(nombre, alias, ranking);
-        jugadores.add(j);
-        System.out.println("Jugador creado: " + j);
-        // opción de asignarlo a un equipo
-        if (!equipos.isEmpty() && confirmar("¿Asignar a un equipo ahora? (s/n): ")) {
-            listar(equipos);
-            int idx = leerEntero("Seleccione equipo (número): ") - 1;
-            if (idx >= 0 && idx < equipos.size()) {
-                equipos.get(idx).addJugador(j);
-                System.out.println("Jugador asignado al equipo " + equipos.get(idx).getNombre());
+        try{
+            String nombre = leerTexto("Nombre del jugador: ");
+            String alias = leerTexto("Alias: ");
+            int ranking = leerEntero("Ranking (entero): ");
+            Jugador j = new Jugador(nombre, alias, ranking);
+            jugadores.add(j);
+            System.out.println("Jugador creado: " + j);
+
+            // opción de asignarlo a un equipo
+            if (!equipos.isEmpty() && confirmar("¿Asignar a un equipo ahora? (s/n): ")) {
+                listar(equipos);
+                int idx = leerEntero("Seleccione equipo (número): ") - 1;
+                if (valido(idx, equipos)) {
+                    equipos.get(idx).addJugador(j);
+                    System.out.println("Jugador asignado al equipo " + equipos.get(idx).getNombre());
+                } else {
+                    System.out.println("Índice de equipo inválido.");
+                }
             }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
     private static void crearTorneo() {
-        String nombre = leerTexto("Nombre del torneo: ");
-        Torneo t = new Torneo(nombre);
-        torneos.add(t);
-        System.out.println("Torneo creado: " + t);
+        try {
+            String nombre = leerTexto("Nombre del torneo: ");
+            Torneo t = new Torneo(nombre);
+            torneos.add(t);
+            System.out.println("Torneo creado: " + t);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static void crearPartida() {
@@ -120,9 +150,12 @@ public class Main {
             System.out.println("Requisitos: al menos 1 torneo, 2 equipos, 1 juego y 1 árbitro.");
             return;
         }
+
         listar(torneos);
         int idxT = leerEntero("Seleccione torneo (número): ") - 1;
-        if (!valido(idxT, torneos)) { System.out.println("Torneo inválido."); return; }
+        if (!valido(idxT, torneos)) {
+            System.out.println("Torneo inválido.");
+            return; }
         Torneo torneo = torneos.get(idxT);
 
         listar(equipos);
@@ -137,12 +170,16 @@ public class Main {
 
         listar(juegos);
         int idxJ = leerEntero("Seleccione Juego (número): ") - 1;
-        if (!valido(idxJ, juegos)) { System.out.println("Juego inválido."); return; }
+        if (!valido(idxJ, juegos)) {
+            System.out.println("Juego inválido.");
+            return; }
         Juego juego = juegos.get(idxJ);
 
         listar(arbitros);
         int idxA = leerEntero("Seleccione Árbitro (número): ") - 1;
-        if (!valido(idxA, arbitros)) { System.out.println("Árbitro inválido."); return; }
+        if (!valido(idxA, arbitros)) {
+            System.out.println("Árbitro inválido.");
+            return; }
         Arbitro arbitro = arbitros.get(idxA);
 
         Partida p = new Partida(e1, e2, juego, arbitro);
@@ -162,7 +199,9 @@ public class Main {
 
     // ----- listar / eliminar -----
     private static void listarTorneosDetalle() {
-        if (torneos.isEmpty()) { System.out.println("No hay torneos."); return; }
+        if (torneos.isEmpty()) {
+            System.out.println("No hay torneos.");
+            return; }
         for (Torneo t : torneos) {
             System.out.println("\nTorneo: " + t.getNombre());
             System.out.println(" Equipos:");
@@ -192,10 +231,14 @@ public class Main {
     }
 
     private static void eliminarTorneo() {
-        if (torneos.isEmpty()) { System.out.println("No hay torneos para eliminar."); return; }
+        if (torneos.isEmpty()) {
+            System.out.println("No hay torneos para eliminar.");
+            return; }
         listar(torneos);
         int idx = leerEntero("Seleccione torneo a eliminar (número): ") - 1;
-        if (!valido(idx, torneos)) { System.out.println("Índice inválido."); return; }
+        if (!valido(idx, torneos)) {
+            System.out.println("Índice inválido.");
+            return; }
         Torneo t = torneos.get(idx);
 
         // borrar partidas (esto limpia referencias en Juego/Arbitro)
