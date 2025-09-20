@@ -1,14 +1,14 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Juego: pertenece a una Categoria y puede usarse en muchas Partidas.
  */
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class Juego {
     private static final AtomicInteger NEXT_ID = new AtomicInteger(1);
     private final int id;
@@ -57,17 +57,24 @@ public class Juego {
         return categoria;
     }
 
+    /**
+     * Asigna la categoría al juego y actualiza la relación bidireccional.
+     */
     public void setCategoria(Categoria categoria) {
+        // Si es la misma categoría, no hacemos nada
         if (this.categoria == categoria) return;
 
+        // Quitarse de la categoría anterior
         if (this.categoria != null) {
-            this.categoria.getJuegos().remove(this);
+            this.categoria.removeJuego(this);
         }
 
+        // Asignar la nueva categoría
         this.categoria = categoria;
 
-        if (categoria != null && !categoria.getJuegos().contains(this)) {
-            categoria.getJuegos().add(this);
+        // Añadirse a la nueva categoría
+        if (categoria != null) {
+            categoria.addJuego(this);
         }
     }
 
@@ -108,4 +115,3 @@ public class Juego {
         return Objects.hash(id);
     }
 }
-

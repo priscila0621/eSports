@@ -36,7 +36,7 @@ public class Jugador {
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del jugador no puede estar vacío.");
         }
-        this.nombre = nombre;
+        this.nombre = nombre.trim();
     }
 
     public String getAlias() {
@@ -47,7 +47,7 @@ public class Jugador {
         if (alias == null || alias.trim().isEmpty()) {
             throw new IllegalArgumentException("El alias del jugador no puede estar vacío.");
         }
-        this.alias = alias;
+        this.alias = alias.trim();
     }
 
     public int getRanking() {
@@ -65,20 +65,23 @@ public class Jugador {
         return equipo;
     }
 
-    // Cuando se asigna equipo, actualizamos la lista del equipo (bidireccional)
-    public void setEquipo(Equipo equipo) {
-        if (this.equipo == equipo) return;
+    /**
+     * Mantiene la relación bidireccional de forma segura (sin recursión).
+     */
+    public void setEquipo(Equipo nuevo) {
+        if (this.equipo == nuevo) return; // nada que hacer
 
-        // quitar de equipo anterior
-        if (this.equipo != null) {
-            this.equipo.removeJugador(this);
+        Equipo anterior = this.equipo;
+        this.equipo = nuevo;
+
+        // Quitar del equipo anterior
+        if (anterior != null) {
+            anterior.removeJugadorInternal(this);
         }
 
-        this.equipo = equipo;
-
-        // agregar a nuevo equipo si aplica
-        if (equipo != null && !equipo.getJugadores().contains(this)) {
-            equipo.addJugador(this);
+        // Agregar al nuevo equipo
+        if (nuevo != null) {
+            nuevo.addJugadorInternal(this);
         }
     }
 

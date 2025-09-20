@@ -99,8 +99,17 @@ public class Main {
     }
 
     private static void crearEquipo() {
+        String nombre = leerTexto("Nombre del equipo: ");
+
+        // Validar duplicado en la lista local antes de crear
+        for (Equipo eq : equipos) {
+            if (eq.getNombre().equalsIgnoreCase(nombre.trim())) {
+                System.out.println("Error: Ya existe un equipo con el nombre '" + nombre + "'.");
+                return;
+            }
+        }
+
         try {
-            String nombre = leerTexto("Nombre del equipo: ");
             Equipo e = new Equipo(nombre);
             equipos.add(e);
             System.out.println("Equipo creado: " + e);
@@ -108,6 +117,7 @@ public class Main {
             System.out.println("Error: " + e.getMessage());
         }
     }
+
 
     private static void crearJugador() {
         try{
@@ -168,6 +178,19 @@ public class Main {
         Equipo e1 = equipos.get(idxE1);
         Equipo e2 = equipos.get(idxE2);
 
+        // Validación de jugadores en ambos equipos
+        StringBuilder errores = new StringBuilder();
+        if (e1.getJugadores().isEmpty()) {
+            errores.append(" - El equipo ").append(e1.getNombre()).append(" no tiene jugadores.\n");
+        }
+        if (e2.getJugadores().isEmpty()) {
+            errores.append(" - El equipo ").append(e2.getNombre()).append(" no tiene jugadores.\n");
+        }
+        if (errores.length() > 0) {
+            System.out.println("No se puede crear la partida:\n" + errores);
+            return;
+        }
+
         listar(juegos);
         int idxJ = leerEntero("Seleccione Juego (número): ") - 1;
         if (!valido(idxJ, juegos)) {
@@ -182,17 +205,14 @@ public class Main {
             return; }
         Arbitro arbitro = arbitros.get(idxA);
 
+        // ahora sí creamos la partida con datos válidos
         Partida p = new Partida(e1, e2, juego, arbitro);
 
-        // registrar la partida en las colecciones relacionadas
         torneo.addPartida(p);    // composición: torneo posee la partida
-
-        // <-- CORRECCIÓN: asegurar que los equipos queden referenciados en el torneo
         torneo.addEquipo(e1);
         torneo.addEquipo(e2);
-
-        arbitro.addPartida(p);   // Árbitro la supervisa
-        juego.addPartida(p);     // Juego la referencia
+        arbitro.addPartida(p);
+        juego.addPartida(p);
 
         System.out.println("Partida creada: " + p);
     }

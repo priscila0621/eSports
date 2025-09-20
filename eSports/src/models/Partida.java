@@ -25,8 +25,11 @@ public class Partida {
 
     public Partida(Equipo e1, Equipo e2, Juego juego, Arbitro arbitro) {
         this();
-        setEquipo1(e1);
-        setEquipo2(e2);
+        // Valida ambos equipos antes de asignar
+        if (validarEquipos(e1, e2)) {
+            this.equipo1 = e1;
+            this.equipo2 = e2;
+        }
         setJuego(juego);
         setArbitro(arbitro);
     }
@@ -77,22 +80,8 @@ public class Partida {
         return equipo1;
     }
 
-    public void setEquipo1(Equipo equipo1) {
-        if (equipo1 == null) {
-            throw new IllegalArgumentException("Equipo1 no puede ser nulo.");
-        }
-        this.equipo1 = equipo1;
-    }
-
     public Equipo getEquipo2() {
         return equipo2;
-    }
-
-    public void setEquipo2(Equipo equipo2) {
-        if (equipo2 == null) {
-            throw new IllegalArgumentException("Equipo2 no puede ser nulo.");
-        }
-        this.equipo2 = equipo2;
     }
 
     public int getId() {
@@ -113,9 +102,36 @@ public class Partida {
 
     public void setFecha(Date fecha) {
         if (fecha == null) {
-            throw new IllegalArgumentException("La fecha no puede ser nula.");
+            // no lanza excepción; solo ignora
+            return;
         }
         this.fecha = fecha;
+    }
+
+    /**
+     * Valida que ambos equipos tengan al menos un jugador.
+     * Si alguno falla, muestra un mensaje indicando exactamente cuáles están vacíos.
+     */
+    private boolean validarEquipos(Equipo e1, Equipo e2) {
+        StringBuilder errores = new StringBuilder();
+
+        if (e1 == null || e1.getJugadores() == null || e1.getJugadores().isEmpty()) {
+            errores.append("El equipo ")
+                    .append(e1 != null ? e1.getNombre() : "Equipo1")
+                    .append(" no tiene jugadores.\n");
+        }
+
+        if (e2 == null || e2.getJugadores() == null || e2.getJugadores().isEmpty()) {
+            errores.append("El equipo ")
+                    .append(e2 != null ? e2.getNombre() : "Equipo2")
+                    .append(" no tiene jugadores.\n");
+        }
+
+        if (errores.length() > 0) {
+            System.out.println("No se puede crear la partida:\n" + errores);
+            return false;
+        }
+        return true;
     }
 
     /**

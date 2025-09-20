@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Equipo {
     private static final AtomicInteger NEXT_ID = new AtomicInteger(1);
+    private static final Set<String> NOMBRES_USADOS = new HashSet<>(); // registro de nombres únicos
+
     private final int id;
     private String nombre;
 
@@ -24,16 +26,47 @@ public class Equipo {
     }
 
     // ----- Jugadores -----
+    /**
+     * API pública para agregar un jugador.
+     * Delegamos la sincronización completa a Jugador.setEquipo(...)
+     * para garantizar que ambos extremos queden consistentes sin recursión.
+     */
     public void addJugador(Jugador j) {
         if (j == null) return;
-        j.setEquipo(this); // delegamos consistencia a Jugador
+        if (j.getEquipo() == this) {
+            // por seguridad: si no está en la lista, lo añadimos
+            if (!jugadores.contains(j)) jugadores.add(j);
+            return;
+        }
+        // Esto llamará a j.setEquipo(this), que a su vez usará addJugadorInternal(...)
+        j.setEquipo(this);
     }
 
+    /**
+     * API pública para remover un jugador.
+     * Elimina de la lista y actualiza el equipo del jugador (si corresponde).
+     */
     public void removeJugador(Jugador j) {
         if (j == null) return;
         if (jugadores.remove(j)) {
-            j.setEquipo(null);
+            if (j.getEquipo() == this) {
+                j.setEquipo(null);
+            }
         }
+    }
+
+    /**
+     * Métodos package-private (internos) usados por Jugador.setEquipo(...) para
+     * modificar la lista sin provocar llamadas recursivas.
+     */
+    void addJugadorInternal(Jugador j) {
+        if (j == null) return;
+        if (!jugadores.contains(j)) jugadores.add(j);
+    }
+
+    void removeJugadorInternal(Jugador j) {
+        if (j == null) return;
+        jugadores.remove(j);
     }
 
     // ----- Torneos (M:N) -----
@@ -67,7 +100,25 @@ public class Equipo {
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del equipo no puede estar vacío.");
         }
-        this.nombre = nombre;
+
+        String nombreLimpio = nombre.trim();
+
+        // Si ya tiene nombre, liberamos el viejo antes de cambiar
+        if (this.nombre != null) {
+            NOMBRES_USADOS.remove(this.nombre);
+        }
+
+        // Validar duplicado (insensible a mayúsc/minúsc por consistencia)
+        for (String n : NOMBRES_USADOS) {
+            if (n.equalsIgnoreCase(nombreLimpio)) {
+                // restauramos el valor antiguo en caso de fallo
+                if (this.nombre != null) NOMBRES_USADOS.add(this.nombre);
+                throw new IllegalArgumentException("Ya existe un equipo con el nombre: " + nombreLimpio);
+            }
+        }
+
+        NOMBRES_USADOS.add(nombreLimpio);
+        this.nombre = nombreLimpio;
     }
 
     public List<Jugador> getJugadores() {
@@ -75,7 +126,10 @@ public class Equipo {
     }
 
     public void setJugadores(List<Jugador> jugadores) {
-        this.jugadores.clear();
+        // reemplazamos por la colección nueva, usando addJugador para mantener consistencia
+        for (Jugador j : new ArrayList<>(this.jugadores)) {
+            removeJugador(j);
+        }
         if (jugadores != null) {
             for (Jugador j : jugadores) {
                 addJugador(j);
